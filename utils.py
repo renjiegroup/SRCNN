@@ -5,6 +5,8 @@ import glob
 import h5py
 import numpy as np
 import PIL.Image as pil_image
+from torch.utils.data import Dataset
+from torch.utils.data.dataloader import DataLoader
 
 
 def convert_rgb_to_y(img):
@@ -127,29 +129,30 @@ def eval(args):
 
     h5_file.close()
 
-    class TrainDataset(Dataset):
-        def __init__(self, h5_file):
-            super(TrainDataset, self).__init__()
-            self.h5_file = h5_file
 
-        def __getitem__(self, idx):
-            with h5py.File(self.h5_file, 'r') as f:
-                return np.expand_dims(f['lr'][idx] / 255., 0), np.expand_dims(f['hr'][idx] / 255., 0)
+class TrainDataset(Dataset):
+    def __init__(self, h5_file):
+        super(TrainDataset, self).__init__()
+        self.h5_file = h5_file
 
-        def __len__(self):
-            with h5py.File(self.h5_file, 'r') as f:
-                return len(f['lr'])
+    def __getitem__(self, idx):
+        with h5py.File(self.h5_file, 'r') as f:
+            return np.expand_dims(f['lr'][idx] / 255., 0), np.expand_dims(f['hr'][idx] / 255., 0)
 
-    class EvalDataset(Dataset):
-        def __init__(self, h5_file):
-            super(EvalDataset, self).__init__()
-            self.h5_file = h5_file
+    def __len__(self):
+        with h5py.File(self.h5_file, 'r') as f:
+            return len(f['lr'])
 
-        def __getitem__(self, idx):
-            with h5py.File(self.h5_file, 'r') as f:
-                return np.expand_dims(f['lr'][str(idx)][:, :] / 255., 0), np.expand_dims(f['hr'][str(idx)][:, :] / 255.,
+class EvalDataset(Dataset):
+    def __init__(self, h5_file):
+        super(EvalDataset, self).__init__()
+        self.h5_file = h5_file
+
+    def __getitem__(self, idx):
+        with h5py.File(self.h5_file, 'r') as f:
+            return np.expand_dims(f['lr'][str(idx)][:, :] / 255., 0), np.expand_dims(f['hr'][str(idx)][:, :] / 255.,
                                                                                          0)
 
-        def __len__(self):
-            with h5py.File(self.h5_file, 'r') as f:
-                return len(f['lr'])
+    def __len__(self):
+        with h5py.File(self.h5_file, 'r') as f:
+            return len(f['lr'])
